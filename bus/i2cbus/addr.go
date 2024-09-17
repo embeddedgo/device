@@ -36,10 +36,10 @@ func (a Addr) String() string {
 		if a>>11 != 0 {
 			return "INVA"
 		}
-		buf[1] = a>>3&f + '0'
+		buf[1] = byte(a>>8&0xf) + '0'
 	}
-	buf[2] = a>>4&f + '0'
-	buf[3] = a>>4&f + '0'
+	buf[2] = byte(a>>4&0xf) + '0'
+	buf[3] = byte(a&0xf) + '0'
 	if a&HS == 0 {
 		buf[0] = 'x'
 	} else {
