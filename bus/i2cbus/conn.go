@@ -27,6 +27,9 @@ type Conn interface {
 	io.ReadWriteCloser
 	io.ByteReader
 	io.ByteWriter
+
+	Master() Master
+	Addr() Addr
 }
 
 // A Master represents an I2C bus master.

@@ -13,6 +13,14 @@ const (
 
 func (a Addr) String() string {
 	var buf [4]byte
+	if a&HS == 0 {
+		buf[0] = 'x'
+	} else {
+		buf[0] = 'H'
+	}
+	hi := byte(a>>4&0xf) + '0'
+	lo := byte(a&0xf) + '0'
+	n := len(buf)
 	if a&A10 == 0 {
 		if a&^(HS|A10|0b1111_111) != 0 {
 			return "INVL"
@@ -31,19 +39,16 @@ func (a Addr) String() string {
 		case 0b1111_100:
 			return "RESV"
 		}
-		buf[1] = '_'
+		buf[1] = hi
+		buf[2] = lo
+		n = 3
 	} else {
-		if a>>11 != 0 {
+		if a>>12 != 0 {
 			return "INVA"
 		}
-		buf[1] = byte(a>>8&0xf) + '0'
+		buf[1] = byte(a>>8&0x3) + '0'
+		buf[2] = hi
+		buf[3] = lo
 	}
-	buf[2] = byte(a>>4&0xf) + '0'
-	buf[3] = byte(a&0xf) + '0'
-	if a&HS == 0 {
-		buf[0] = 'x'
-	} else {
-		buf[0] = 'H'
-	}
-	return string(buf[:])
+	return string(buf[:n])
 }
