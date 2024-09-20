@@ -12,12 +12,16 @@ import (
 //
 // At any time the connection may be in the closed or open state.
 //
-// The first read or write operation opens the connection and a Start Condition
-// on the I2C bus. In the open state the connection has exclusive access to the
-// underlying I2C peripheral.
+// The first read or write operation opens the connection, issues the Start
+// Condition on the I2C bus and sends slave address byte/bytes and reads/writes
+// the provided data. In the open state the connection has exclusive access to
+// the Master.
 //
-// Any read or write operation on the open connection generates Repeated Start
-// condition.
+// The Read and Write methods with zero lenght slice as an argument do nothing
+// with an exception to Write method on closed connection that opens it, that is
+// it generates Start Condition and sends slave address byte/bytes.
+//
+// Any read operation on the open connection generates Repeated Start condition.
 //
 // Close method instructs the underlying I2C peripheral to generate stop
 // condition on the I2C bus. It also releases the underlying I2C peripheral
