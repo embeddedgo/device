@@ -4,6 +4,8 @@
 
 package i2cbus
 
+import "errors"
+
 type MasterError struct {
 	Name string
 	Err  error
@@ -16,3 +18,7 @@ func (e *MasterError) Unwrap() error {
 func (e *MasterError) Error() string {
 	return "I2C master: " + e.Name + ": " + e.Err.Error()
 }
+
+// ErrTimeout may be returned by the Conn.Wait method in the MasterError.Err
+// field. You can use the errors.Is function to detect such case.
+var ErrTimeout = errors.New("timeout")

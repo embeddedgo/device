@@ -6,37 +6,51 @@ package i2cbus
 
 import (
 	"io"
+	"time"
 )
 
-// A Conn represents an I2C connection.
+// A Conn represents an I2C connection. The connection may be considered as
+// the way to reach some slave device using the underlying Master and address.
 //
-// At any time the connection may be in the closed or open state.
+// At any time the connection may be in the closed or open state. The newly
+// created connection is in the closed state. It may be opened and closed any
+// number of times.
 //
-// The first read or write operation opens the connection, issues the Start
-// Condition on the I2C bus and sends slave address byte/bytes and reads/writes
-// the provided data. In the open state the connection has exclusive access to
-// the Master.
+// The Read and Write methods with zero lenght slice as an argument do nothing.
 //
-// The Read and Write methods with zero lenght slice as an argument do nothing
-// with an exception to Write method on closed connection that opens it, that is
-// it generates Start Condition and sends slave address byte/bytes.
+// The first successful read, write or wait operation on the closed connection
+// opens it. In the open state the connection has exclusive access to the
+// underlying Master.
 //
-// Any read operation on the open connection generates Repeated Start condition.
+// The first read or write operation on the closed connection generates the
+// Start condition. If the connection is in open state each read operation and
+// the first write operation after the read operation generate the Repeated
+// Start condition.
 //
-// Close method instructs the underlying I2C peripheral to generate stop
-// condition on the I2C bus. It also releases the underlying I2C peripheral
-// making it available to other connections. The closed conection can be reopen
-// using any read or write method.
+// The Wait method can be used on closed connection only. It waits for the ACK
+// from slave device by periodically issuing the Start Condition. On success it
+// returns without error leaving the connection in open state (see also
+// ErrTimeout).
+//
+// Close method instructs the underlying Master to generate stop condition on
+// the I2C bus and releases it making it available to the other connections.
+//
+// The connection cannot be used concurently by multiple goroutines without
+// additional synchronization. If multiple goroutines need to communicate
+// conncurently with the same slave device the best way is to use multiple
+// connections.
 type Conn interface {
 	io.ReadWriteCloser
 	io.ByteReader
 	io.ByteWriter
 
+	Wait(timeout time.Duration) error
 	Master() Master
 	Addr() Addr
 }
 
-// A Master represents an I2C bus master.
+// A Master represents an I2C bus master. The Master can be used concurently by
+// multiple goroutines.
 type Master interface {
 	Name() string        // returns the name of the master / bus
 	NewConn(a Addr) Conn // returns new closed connection to the slave device
