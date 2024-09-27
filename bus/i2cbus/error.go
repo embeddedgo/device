@@ -6,6 +6,8 @@ package i2cbus
 
 import "errors"
 
+// A MasterError is an error type that may be returned by methods of the Conn
+// interface.
 type MasterError struct {
 	Name string
 	Err  error
