@@ -4,37 +4,41 @@
 
 package i2cbus
 
-import (
-	"io"
-	"time"
-)
+import 	"io"
 
 // A Conn represents an I2C connection. The connection may be considered as
-// the way to reach a slave device using the underlying Master and address.
+// the way to reach a slave device using the underlying Master and the slave
+// address.
 //
 // At any time the connection may be in the closed or open state. The newly
 // created connection is in the closed state. It may be opened and closed any
 // number of times.
 //
-// The Read and Write methods with a zero lenght slice as an argument do
-// nothing.
+// The first successful read or write operation on the closed connection opens
+// it and generates the Start condition. In the open state the connection has
+// exclusive access to the underlying Master.
 //
-// The first successful read, write or wait operation on the closed connection
-// opens it. In the open state the connection has exclusive access to the
-// underlying Master.
+// If the connection is in the open state each read operation may generate
+// the Repeated Start condition. The first write after read and the first
+// read after write always generates it. Consecutive writes never generate the
+// Repeated Start condition.
 //
-// The first read or write operation on the closed connection generates the
-// Start condition. If the connection is in open state each read operation and
-// the first write operation after the read operation generate the Repeated
-// Start condition.
+// Close method generates the Stop Condition on the I2C bus and releases the
+// Master making it available to the other connections. Close is no-op on the
+// closed connection.
 //
-// The Wait method can be used on closed connection only. It waits for the ACK
-// from the slave device by periodically issuing the Start Condition addressed
-// to it. On success it returns without error leaving the connection in open
-// state (see also ErrTimeout).
+// Errors returned by the read and write operations may be asynchronous due to
+// the possible internal buffering and latency of the Master or the underlying
+// peripheral. That is, the lack of an error doesn't mean that the write
+// operation was successful and the error returned by an read or write operation
+// may be caused by the previous operation. You must chkeck the error returned
+// by Close to make sure the entire I2C transaction was succesfull. If the
+// method returns a non-nil error the connection is closed and the Master and
+// bus released (Stop Condition generated). See also ErrNACK.
 //
-// Close method instructs the underlying Master to generate the Stop Condition
-// on the I2C bus and releases it making it available to the other connections.
+// The Read or Write call on the closed connection with the zero-length slice as
+// an argument followed by the Close call may be used to check if the slave
+// device is ready for read or write (check the error returned by Close).
 //
 // The connection cannot be used concurently by multiple goroutines without
 // additional synchronization. If multiple goroutines need to communicate
@@ -45,7 +49,6 @@ type Conn interface {
 	io.ByteReader
 	io.ByteWriter
 
-	Wait(timeout time.Duration) error
 	Master() Master
 	Addr() Addr
 }

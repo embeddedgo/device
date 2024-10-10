@@ -21,6 +21,7 @@ func (e *MasterError) Error() string {
 	return "I2C master: " + e.Name + ": " + e.Err.Error()
 }
 
-// ErrTimeout may be returned by the Conn.Wait method in the MasterError.Err
-// field. You can use the errors.Is function to detect such case.
-var ErrTimeout = errors.New("timeout")
+// ErrACK should be returned in the MasterError.Err field if the error is caused
+// by unexpected NACK or ACK. The rare case when unexpected ACK may occur is for
+// example the strat up of the high-speed transmission.
+var ErrACK = errors.New("unexpected NACK/ACK")
