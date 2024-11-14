@@ -34,7 +34,7 @@ import 	"io"
 // may be caused by the previous operation. You must chkeck the error returned
 // by Close to make sure the entire I2C transaction was succesfull. If the
 // method returns a non-nil error the connection is closed and the Master and
-// bus released (Stop Condition generated). See also ErrNACK.
+// bus released (Stop Condition generated). See also ErrACK.
 //
 // The Read or Write call on the closed connection with the zero-length slice as
 // an argument followed by the Close call may be used to check if the slave
