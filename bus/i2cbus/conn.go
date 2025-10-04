@@ -21,24 +21,32 @@ import 	"io"
 // If the connection is in the open state each read operation may generate
 // the Repeated Start condition. The first write after read and the first
 // read after write always generates it. Consecutive writes never generate the
-// Repeated Start condition.
+// Repeated Start condition. If the Repeated Start condition is not supported
+// the Stop following by Start is used instead.
 //
 // Close method generates the Stop Condition on the I2C bus and releases the
 // Master making it available to the other connections. Close is no-op on the
 // closed connection.
 //
-// Errors returned by the read and write operations may be asynchronous due to
-// the possible internal buffering and latency of the Master or the underlying
+// Errors returned by the read and write operations are generally asynchronous
+// due to the internal buffering and latency of the Master or the underlying
 // peripheral. That is, the lack of an error doesn't mean that the write
-// operation was successful and the error returned by an read or write operation
-// may be caused by the previous operation. You must chkeck the error returned
-// by Close to make sure the entire I2C transaction was succesfull. If the
-// method returns a non-nil error the connection is closed and the Master and
-// bus released (Stop Condition generated). See also ErrACK.
+// operation was successful and the error returned by the read or write may be
+// caused by the previous operation. You must check the error returned by Close
+// to make sure the entire I2C write transaction was succesfull. This makes the
+// simple `defer c.Close()` idiom erroneous in case of write transactions. In
+// contrast the nil error returned by the read operation ensures the read was
+// successfull. You can check only the error returned by the Close method and
+// skip checking errors returned by other methods provided you don't use the
+// read data until close. If the method other than Close return a non-nil error
+// then all subsequent method calls are no-ops and return the same or diferent
+// error (additionnal errors may be detected in the meantime). See also ErrACK.
 //
-// The Read or Write call on the closed connection with the zero-length slice as
-// an argument followed by the Close call may be used to check if the slave
-// device is ready for read or write (check the error returned by Close).
+// The Read or Write call on the closed connection with nil or zero-length slice
+// as an argument return immediately without performing any operation. That is,
+// you cannot use Write(nil) or Read(nil) to generate a Start Condition without
+// the data transfer to check if the slave defice is ready for the next transfer
+// (not all I2C master hardware support this).
 //
 // The connection cannot be used concurently by multiple goroutines without
 // additional synchronization. If multiple goroutines need to communicate
